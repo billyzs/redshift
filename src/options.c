@@ -19,6 +19,10 @@
 
 #ifdef HAVE_CONFIG_H
 # include "config.h"
+#else
+// TODO properly use and define these symbols
+#define PACKAGE_BUGREPORT ""
+#define	PACKAGE_STRING "redshift 1.11"
 #endif
 
 #include <stdlib.h>

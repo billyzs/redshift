@@ -21,6 +21,11 @@
 # include "config.h"
 #endif
 
+// TODO properly use this
+#ifndef LOCALEDIR
+#define LOCALEDIR ""
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
