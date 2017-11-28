@@ -21,7 +21,7 @@ set(REDSHIFT_BASE_INCLUDE_DIR "${GLIBCONFIG_INCLUDE_DIR} ${GLIB_INCLUDE_DIRS} ${
 
 # file(GLOB SOURCES "./*.c")
 set (SOURCES colorramp.c
-        config-ini.c gamma-dummy.c gamma-drm.c gamma-randr.c hooks.c location-geoclue2.c location-manual.c options.c pipeutils.c redshift.c signals.c  solar.c systemtime.c)
+        config-ini.c gamma-dummy.c gamma-drm.c gamma-randr.c hooks.c location-geoclue2.c location-manual.c options.c pipeutils.c redshift.cpp signals.c  solar.c systemtime.c)
 set (REDSHIFT_LIBS ${Libdrm_LIBRARIES} ${XCB_LIBRARIES} ${GLIB_LIBRARIES}
         ${GLIB_GOBJECT_LIBRARIES} ${GLIB_GTHREAD_LIBRARIES} ${GLIB_GMODULE_LIBRARIES}
         ${GLIB_GIO_LIBRARIES} m)
@@ -30,7 +30,7 @@ set (REDSHIFT_LIBS ${Libdrm_LIBRARIES} ${XCB_LIBRARIES} ${GLIB_LIBRARIES}
 set(LIBS ${Libdrm_LIBRARIES} ${XCB_LIBRARIES} ${GLIB_LIBRARIES})
 
 # executable
-add_executable(redshift redshift.c ${SOURCES})
+add_executable(redshift redshift.cpp ${SOURCES})
 target_include_directories(redshift PUBLIC ${GLIB_INCLUDE_DIRS} ${Libdrm_INCLUDE_DIRS} ${GLIBCONFIG_INCLUDE_DIR} ${XCB_INCLUDE_DIRS})
 target_link_libraries(redshift LINK_PUBLIC ${Libdrm_LIBRARIES} ${XCB_LIBRARIES} ${GLIB_LIBRARIES}
                                            ${GLIB_GOBJECT_LIBRARIES} ${GLIB_GTHREAD_LIBRARIES} ${GLIB_GMODULE_LIBRARIES}

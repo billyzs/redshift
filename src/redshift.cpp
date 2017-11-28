@@ -63,6 +63,7 @@ int poll(struct pollfd *fds, int nfds, int timeout) { abort(); return -1; }
 # define gettext(s) s
 #endif
 
+extern "C" {
 #include "redshift.h"
 #include "config-ini.h"
 #include "solar.h"
@@ -70,7 +71,7 @@ int poll(struct pollfd *fds, int nfds, int timeout) { abort(); return -1; }
 #include "hooks.h"
 #include "signals.h"
 #include "options.h"
-
+}
 /* pause() is not defined on windows platform but is not needed either.
    Use a noop macro instead. */
 #ifdef __WIN32__

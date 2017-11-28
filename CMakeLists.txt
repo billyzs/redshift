@@ -4,7 +4,9 @@ project(REDSHIFT)
 
 
 subdirs(src)
-set(CMAKE_MODULE_PATH CMakeModules)
+message(${CMAKE_SOURCE_DIR})
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMakeModules")
+message(${CMAKE_MODULE_PATH})
 
 # external dependencies
 # glib
@@ -14,6 +16,6 @@ find_package (XCB REQUIRED XCB RANDR RENDER)
 # libdrm
 find_package (Libdrm REQUIRED)
 
-set(CMAKE_BUILD_TYPE Debug)
+# set(CMAKE_BUILD_TYPE Debug)
 set (UNIX_FLAGS "-DENABLE_RANDR -DENABLE_GEOCLUE2 -pthread")
-set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${UNIX_FLAGS}")
+set (CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} ${UNIX_FLAGS}")
