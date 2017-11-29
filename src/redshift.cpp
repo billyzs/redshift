@@ -67,11 +67,12 @@ int poll(struct pollfd *fds, int nfds, int timeout) { abort(); return -1; }
 # define gettext(s) s
 #endif
 
+#include "systemtime.h"
+
 extern "C" {
 #include "redshift.h"
 #include "config-ini.h"
 #include "solar.h"
-#include "systemtime.h"
 #include "hooks.h"
 #include "signals.h"
 #include "options.h"
