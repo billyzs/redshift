@@ -18,4 +18,4 @@ find_package (Libdrm REQUIRED)
 
 # set(CMAKE_BUILD_TYPE Debug)
 set (UNIX_FLAGS "-DENABLE_RANDR -DENABLE_GEOCLUE2 -pthread")
-set (CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} ${UNIX_FLAGS}")
+set (CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} ${UNIX_FLAGS} --std=c++17 -Wall -Werror")
