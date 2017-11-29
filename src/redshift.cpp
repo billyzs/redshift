@@ -33,6 +33,10 @@
 #include <math.h>
 #include <locale.h>
 #include <errno.h>
+#include <chrono>
+#include <iostream>
+//TODO move to systemtime.h
+#include <ctime>
 
 /* poll.h is not available on Windows but there is no Windows location provider
    using polling. On Windows, we just define some stubs to make things compile.
@@ -112,27 +116,33 @@ extern "C" {
 #endif
 
 #undef CLAMP
-#define CLAMP(lo,mid,up)  (((lo) > (mid)) ? (lo) : (((mid) < (up)) ? (mid) : (up)))
+// #define CLAMP(lo,mid,up)  (((lo) > (mid)) ? (lo) : (((mid) < (up)) ? (mid) : (up)))
 
+//TODO write tests, move to header
+//TODO make compatible with r- & lvalue references
+template<typename L, typename M, typename U>
+constexpr auto CLAMP(const L lo, const M mid, const U up) noexcept {
+	return (((lo) > (mid)) ? (lo) : (((mid) < (up)) ? (mid) : (up)));
+}
 
 /* Bounds for parameters. */
-#define MIN_LAT   -90.0
-#define MAX_LAT    90.0
-#define MIN_LON  -180.0
-#define MAX_LON   180.0
-#define MIN_TEMP   1000
-#define MAX_TEMP  25000
-#define MIN_BRIGHTNESS  0.1
-#define MAX_BRIGHTNESS  1.0
-#define MIN_GAMMA   0.1
-#define MAX_GAMMA  10.0
+constexpr float     MIN_LAT         {-90.0};
+constexpr float     MAX_LAT         {90.0};
+constexpr float     MIN_LON         {-180.0};
+constexpr float     MAX_LON         {180.0};
+constexpr u_int16_t MIN_TEMP        {1000};
+constexpr u_int16_t MAX_TEMP        {25000};
+constexpr float     MIN_BRIGHTNESS  {0.1};
+constexpr float     MAX_BRIGHTNESS  {1.0};
+constexpr float     MIN_GAMMA       {0.1};
+constexpr float     MAX_GAMMA       {10.0};
 
 /* Duration of sleep between screen updates (milliseconds). */
-#define SLEEP_DURATION        5000
-#define SLEEP_DURATION_SHORT  100
+constexpr u_int16_t SLEEP_DURATION_MS        {5000};
+constexpr u_int16_t SLEEP_DURATION_SHORT_MS  {100};
 
 /* Length of fade in numbers of short sleep durations. */
-#define FADE_LENGTH  40
+constexpr u_int16_t FADE_LENGTH              {40};
 
 
 /* Names of periods of day */
@@ -146,75 +156,80 @@ static const char *period_names[] = {
 
 
 /* Determine which period we are currently in based on time offset. */
-static period_t
-get_period_from_time(const transition_scheme_t *transition, int time_offset)
+static constexpr period_t
+get_period_from_time(const transition_scheme_t *transition, const int& time_offset) noexcept
 {
-	if (time_offset < transition->dawn.start ||
-	    time_offset >= transition->dusk.end) {
+	if (time_offset < transition->dawn.start || time_offset >= transition->dusk.end) {
 		return PERIOD_NIGHT;
-	} else if (time_offset >= transition->dawn.end &&
-		   time_offset < transition->dusk.start) {
+	}
+	else if (time_offset >= transition->dawn.end && time_offset < transition->dusk.start) {
 		return PERIOD_DAYTIME;
-	} else {
+	}
+	else {
 		return PERIOD_TRANSITION;
 	}
 }
 
 /* Determine which period we are currently in based on solar elevation. */
-static period_t
-get_period_from_elevation(
-	const transition_scheme_t *transition, double elevation)
+static constexpr
+period_t get_period_from_elevation(const transition_scheme_t *transition, const double& elevation) noexcept
 {
 	if (elevation < transition->low) {
 		return PERIOD_NIGHT;
-	} else if (elevation < transition->high) {
+	}
+	else if (elevation < transition->high) {
 		return PERIOD_TRANSITION;
-	} else {
+	}
+	else {
 		return PERIOD_DAYTIME;
 	}
 }
 
 /* Determine how far through the transition we are based on time offset. */
-static double
-get_transition_progress_from_time(
-	const transition_scheme_t *transition, int time_offset)
+static constexpr double
+get_transition_progress_from_time(const transition_scheme_t *transition,
+                                  const int& time_offset) noexcept
 {
-	if (time_offset < transition->dawn.start ||
-	    time_offset >= transition->dusk.end) {
+	if (time_offset < transition->dawn.start || time_offset >= transition->dusk.end) {
 		return 0.0;
-	} else if (time_offset < transition->dawn.end) {
-		return (transition->dawn.start - time_offset) /
-			(double)(transition->dawn.start -
-				transition->dawn.end);
-	} else if (time_offset > transition->dusk.start) {
-		return (transition->dusk.end - time_offset) /
-			(double)(transition->dusk.end -
-				transition->dusk.start);
-	} else {
+	}
+	else if (time_offset < transition->dawn.end) {
+		return static_cast<double>(transition->dawn.start - time_offset) /
+				static_cast<double>(transition->dawn.start - transition->dawn.end);
+	}
+	else if (time_offset > transition->dusk.start) {
+		return static_cast<double>(transition->dusk.end - time_offset) /
+				static_cast<double>(transition->dusk.end - transition->dusk.start);
+	}
+	else {
 		return 1.0;
 	}
 }
 
 /* Determine how far through the transition we are based on elevation. */
-static double
-get_transition_progress_from_elevation(
-	const transition_scheme_t *transition, double elevation)
+static constexpr double
+get_transition_progress_from_elevation(const transition_scheme_t *transition,
+                                       const double& elevation) noexcept
 {
 	if (elevation < transition->low) {
 		return 0.0;
-	} else if (elevation < transition->high) {
-		return (transition->low - elevation) /
-			(transition->low - transition->high);
-	} else {
+	}
+	else if (elevation < transition->high) {
+		return (transition->low - elevation) / (transition->low - transition->high);
+	}
+	else {
 		return 1.0;
 	}
 }
 
 /* Return number of seconds since midnight from timestamp. */
 static int
-get_seconds_since_midnight(double timestamp)
+get_seconds_since_midnight(const double& timestamp) noexcept
 {
-	time_t t = (time_t)timestamp;
+	//TODO what's the bese way to do this uing chrono?
+	using namespace std::chrono;
+	// std::time_t time1{timestamp};
+	std::time_t t = (time_t)timestamp;
 	struct tm tm;
 	localtime_r(&t, &tm);
 	return tm.tm_sec + tm.tm_min * 60 + tm.tm_hour * 3600;
@@ -222,7 +237,7 @@ get_seconds_since_midnight(double timestamp)
 
 /* Print verbose description of the given period. */
 static void
-print_period(period_t period, double transition)
+print_period(const period_t& period, double& transition)
 {
 	switch (period) {
 	case PERIOD_NONE:
@@ -261,44 +276,39 @@ print_location(const location_t *location)
 
 /* Interpolate color setting structs given alpha. */
 static void
-interpolate_color_settings(
-	const color_setting_t *first,
-	const color_setting_t *second,
-	double alpha,
-	color_setting_t *result)
+interpolate_color_settings(const color_setting_t *first,
+                           const color_setting_t *second,
+                           const double& alpha, color_setting_t *result) noexcept
 {
-	alpha = CLAMP(0.0, alpha, 1.0);
+	double alpha1 = CLAMP(0.0, alpha, 1.0);
 
-	result->temperature = (1.0-alpha)*first->temperature +
-		alpha*second->temperature;
-	result->brightness = (1.0-alpha)*first->brightness +
-		alpha*second->brightness;
+	result->temperature = (1.0-alpha1)*first->temperature +
+		alpha1*second->temperature;
+	result->brightness = (1.0-alpha1)*first->brightness +
+		alpha1*second->brightness;
 	for (int i = 0; i < 3; i++) {
-		result->gamma[i] = (1.0-alpha)*first->gamma[i] +
+		result->gamma[i] = (1.0-alpha1)*first->gamma[i] +
 			alpha*second->gamma[i];
 	}
 }
 
 /* Interpolate color setting structs transition scheme. */
+//TODO make this take both r- & lvalue ref of alpha
 static void
-interpolate_transition_scheme(
-	const transition_scheme_t *transition,
-	double alpha,
-	color_setting_t *result)
+interpolate_transition_scheme(const transition_scheme_t *transition,
+                              const double& alpha,
+                              color_setting_t *result) noexcept
 {
 	const color_setting_t *day = &transition->day;
 	const color_setting_t *night = &transition->night;
-
-	alpha = CLAMP(0.0, alpha, 1.0);
-	interpolate_color_settings(night, day, alpha, result);
+	interpolate_color_settings(night, day, CLAMP(0.0, alpha, 1.0), result);
 }
 
 /* Return 1 if color settings have major differences, otherwise 0.
    Used to determine if a fade should be applied in continual mode. */
-static int
-color_setting_diff_is_major(
-	const color_setting_t *first,
-	const color_setting_t *second)
+static constexpr int
+color_setting_diff_is_major(const color_setting_t *first,
+                            const color_setting_t *second) noexcept
 {
 	return (abs(first->temperature - second->temperature) > 25 ||
 		fabsf(first->brightness - second->brightness) > 0.1 ||
@@ -309,7 +319,7 @@ color_setting_diff_is_major(
 
 /* Reset color setting to default values. */
 static void
-color_setting_reset(color_setting_t *color)
+color_setting_reset(color_setting_t *color) noexcept
 {
 	color->temperature = NEUTRAL_TEMP;
 	color->gamma[0] = 1.0;
@@ -321,8 +331,9 @@ color_setting_reset(color_setting_t *color)
 
 static int
 provider_try_start(const location_provider_t *provider,
-		   location_state_t **state, config_ini_state_t *config,
-		   char *args)
+                   location_state_t **state,
+                   config_ini_state_t *config,
+                   char *args) // probably don't need noexcept
 {
 	int r;
 
@@ -359,7 +370,7 @@ provider_try_start(const location_provider_t *provider,
 
 	/* Set provider options from command line. */
 	const char *manual_keys[] = { "lat", "lon" };
-	int i = 0;
+	unsigned int i = 0;
 	while (args != NULL) {
 		char *next_arg = strchr(args, ':');
 		if (next_arg != NULL) *(next_arg++) = '\0';
@@ -412,8 +423,7 @@ provider_try_start(const location_provider_t *provider,
 }
 
 static int
-method_try_start(const gamma_method_t *method,
-		 gamma_state_t **state, config_ini_state_t *config, char *args)
+method_try_start(const gamma_method_t *method, gamma_state_t **state, config_ini_state_t *config, char *args)
 {
 	int r;
 
@@ -491,8 +501,8 @@ method_try_start(const gamma_method_t *method,
 
 
 /* Check whether gamma is within allowed levels. */
-static int
-gamma_is_valid(const float gamma[3])
+static constexpr int
+gamma_is_valid(const float gamma[3]) noexcept
 {
 	return !(gamma[0] < MIN_GAMMA ||
 		 gamma[0] > MAX_GAMMA ||
@@ -506,7 +516,7 @@ gamma_is_valid(const float gamma[3])
    Prints error message on stderr and returns 0 if invalid, otherwise
    returns 1. */
 static int
-location_is_valid(const location_t *location)
+location_is_valid(const location_t *location) noexcept //TODO is it OK to not raise exception when invalid?
 {
 	/* Latitude */
 	if (location->lat < MIN_LAT || location->lat > MAX_LAT) {
@@ -589,13 +599,13 @@ provider_get_location(
 
 /* Easing function for fade.
    See https://github.com/mietek/ease-tween */
-static double
-ease_fade(double t)
+static constexpr double
+ease_fade(double t) noexcept
 {
-	if (t <= 0) return 0;
-	if (t >= 1) return 1;
-	return 1.0042954579734844 * exp(
-		-6.4041738958415664 * exp(-7.2908241330981340 * t));
+	if      (t <= 0) return 0;
+	else if (t >= 1) return 1;
+	else             return 1.0042954579734844 *
+							exp(-6.4041738958415664 * exp(-7.2908241330981340 * t));
 }
 
 
@@ -771,10 +781,10 @@ run_continual_mode(const location_provider_t *provider,
 		if (fade_length != 0) {
 			fade_time += 1;
 			double frac = fade_time / (double)fade_length;
-			double alpha = CLAMP(0.0, ease_fade(frac), 1.0);
+			// double alpha = CLAMP(0.0, ease_fade(frac), 1.0);
 
 			interpolate_color_settings(
-				&fade_start_interp, &target_interp, alpha,
+				&fade_start_interp, &target_interp, CLAMP(0.0, ease_fade(frac), 1.0),
 				&interp);
 
 			if (fade_time > fade_length) {
@@ -815,9 +825,9 @@ run_continual_mode(const location_provider_t *provider,
 		prev_target_interp = target_interp;
 
 		/* Sleep length depends on whether a fade is ongoing. */
-		int delay = SLEEP_DURATION;
+		int delay = SLEEP_DURATION_MS;
 		if (fade_length != 0) {
-			delay = SLEEP_DURATION_SHORT;
+			delay = SLEEP_DURATION_SHORT_MS;
 		}
 
 		/* Update location. */
