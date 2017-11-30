@@ -68,11 +68,10 @@ int poll(struct pollfd *fds, int nfds, int timeout) { abort(); return -1; }
 #endif
 
 #include "systemtime.hpp"
-
+#include "solar.hpp"
 extern "C" {
 #include "redshift.h"
 #include "config-ini.h"
-#include "solar.h"
 #include "hooks.h"
 #include "signals.h"
 #include "options.h"
@@ -724,8 +723,7 @@ run_continual_mode(const location_provider_t *provider,
 				scheme, time_offset);
 		} else {
 			/* Current angular elevation of the sun */
-			double elevation = solar_elevation(
-				now, loc.lat, loc.lon);
+			double elevation = solar_elevation(now, loc.lat, loc.lon);
 
 			period = get_period_from_elevation(scheme, elevation);
 			transition_prog =
@@ -1215,8 +1213,7 @@ main(int argc, char *argv[])
 				scheme, time_offset);
 		} else {
 			/* Current angular elevation of the sun */
-			double elevation = solar_elevation(
-				now, loc.lat, loc.lon);
+			double elevation = solar_elevation(now, loc.lat, loc.lon);
 			if (options.verbose) {
 				/* TRANSLATORS: Append degree symbol if
 				   possible. */

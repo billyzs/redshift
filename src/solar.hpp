@@ -20,7 +20,7 @@
 #ifndef REDSHIFT_SOLAR_H
 #define REDSHIFT_SOLAR_H
 
-#include "time.h"
+#include <stdint.h>
 
 /* Model of atmospheric refraction near horizon (in degrees). */
 #define SOLAR_ATM_REFRAC  0.833
@@ -41,11 +41,11 @@ typedef enum {
 	SOLAR_TIME_CIVIL_DUSK,
 	SOLAR_TIME_NAUT_DUSK,
 	SOLAR_TIME_ASTRO_DUSK,
-	SOLAR_TIME_MAX
+	SOLAR_TIME_MAX = 10
 } solar_time_t;
 
-
-double solar_elevation(double date, double lat, double lon);
+//TODO option.h isn't cpp yet and it includes this file; change this to constexpr noexcept and pass by reference
+double solar_elevation(const int64_t date, const float lat, const float lon);
 void solar_table_fill(double date, double lat, double lon, double *table);
 
 #endif /* ! REDSHIFT_SOLAR_H */

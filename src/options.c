@@ -41,7 +41,7 @@
 #include "redshift.h"
 #include "config-ini.h"
 #include "options.h"
-#include "solar.h"
+#include "solar.hpp"
 
 /* Angular elevation of the sun at which the color temperature
    transition period starts and ends (in degress).
