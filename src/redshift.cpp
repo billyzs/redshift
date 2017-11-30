@@ -67,7 +67,7 @@ int poll(struct pollfd *fds, int nfds, int timeout) { abort(); return -1; }
 # define gettext(s) s
 #endif
 
-#include "systemtime.h"
+#include "systemtime.hpp"
 
 extern "C" {
 #include "redshift.h"
@@ -556,8 +556,8 @@ provider_get_location(
 		if (loc_fd >= 0) {
 			/* Provider is dynamic. */
 			/* TODO: This should use a monotonic time source. */
-			double now;
-			int r = systemtime_get_time(&now);
+			int64_t now;
+			int r = systemtime_get_time(now);
 			if (r < 0) {
 				fputs(_("Unable to read system time.\n"),
 				      stderr);
@@ -575,8 +575,8 @@ provider_get_location(
 				return 0;
 			}
 
-			double later;
-			r = systemtime_get_time(&later);
+			int64_t later;
+			r = systemtime_get_time(later);
 			if (r < 0) {
 				fputs(_("Unable to read system time.\n"),
 				      stderr);
@@ -707,8 +707,8 @@ run_continual_mode(const location_provider_t *provider,
 		prev_disabled = disabled;
 
 		/* Read timestamp */
-		double now;
-		r = systemtime_get_time(&now);
+		int64_t now;
+		r = systemtime_get_time(now);
 		if (r < 0) {
 			fputs(_("Unable to read system time.\n"), stderr);
 			return -1;
@@ -1198,8 +1198,8 @@ main(int argc, char *argv[])
 			print_location(&loc);
 		}
 
-		double now;
-		r = systemtime_get_time(&now);
+		int64_t now;
+		r = systemtime_get_time(now);
 		if (r < 0) {
 			fputs(_("Unable to read system time.\n"), stderr);
 			options.method->free(method_state);

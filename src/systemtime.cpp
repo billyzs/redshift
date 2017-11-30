@@ -19,7 +19,8 @@
 //TODO convert to cpp
 #include <stdio.h>
 #include <unistd.h>
-
+#include <chrono>
+#include <thread>
 #ifndef _WIN32
 # if _POSIX_TIMERS > 0
 #  include <time.h>
@@ -31,13 +32,17 @@
 # include <windows.h>
 #endif
 
-#include "systemtime.h"
-
+#include "systemtime.hpp"
 
 /* Return current time in T as the number of seconds since the epoch. */
-int
-systemtime_get_time(double *t)
+using namespace std::chrono;
+int systemtime_get_time(int64_t& t) noexcept
 {
+	//TODO verify on other platform
+	//TODO unit test
+
+	t = duration_cast<seconds>(system_clock::now().time_since_epoch()).count();
+
 #if defined(_WIN32) /* Windows */
 	FILETIME now;
 	ULARGE_INTEGER i;
@@ -46,16 +51,17 @@ systemtime_get_time(double *t)
 	i.HighPart = now.dwHighDateTime;
 
 	/* FILETIME is tenths of microseconds since 1601-01-01 UTC */
-	*t = (i.QuadPart / 10000000.0) - 11644473600.0;
+	t = (i.QuadPart / 10000000) - 11644473600;
 #elif _POSIX_TIMERS > 0 /* POSIX timers */
-	struct timespec now;
+
+	/*struct timespec now;
 	int r = clock_gettime(CLOCK_REALTIME, &now);
 	if (r < 0) {
 		perror("clock_gettime");
 		return -1;
 	}
 
-	*t = now.tv_sec + (now.tv_nsec / 1000000000.0);
+	*t = now.tv_sec + (now.tv_nsec / 1000000000.0);*/
 #else /* other platforms */
 	struct timeval now;
 	int r = gettimeofday(&now, NULL);
@@ -71,14 +77,14 @@ systemtime_get_time(double *t)
 }
 
 /* Sleep for a number of milliseconds. */
-void
-systemtime_msleep(unsigned int msecs)
+void systemtime_msleep(const unsigned int &msecs)
 {
 #ifndef _WIN32
-	struct timespec sleep;
+	std::this_thread::sleep_for(milliseconds(msecs));
+	/*struct timespec sleep;
 	sleep.tv_sec = msecs / 1000;
 	sleep.tv_nsec = (msecs % 1000)*1000000;
-	nanosleep(&sleep, NULL);
+	nanosleep(&sleep, NULL);*/
 #else
 	Sleep(msecs);
 #endif
