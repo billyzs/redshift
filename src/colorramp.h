@@ -17,6 +17,10 @@
    Copyright (c) 2010-2014  Jon Lund Steffensen <jonlst@gmail.com>
 */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef REDSHIFT_COLORRAMP_H
 #define REDSHIFT_COLORRAMP_H
 
@@ -30,3 +34,7 @@ void colorramp_fill_float(float *gamma_r, float *gamma_g, float *gamma_b,
 			  int size, const color_setting_t *setting);
 
 #endif /* ! REDSHIFT_COLORRAMP_H */
+
+#ifdef __cplusplus
+};
+#endif

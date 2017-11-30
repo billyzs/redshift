@@ -20,14 +20,14 @@
 
 #include <stdint.h>
 #include <math.h>
-
-#include "redshift.h"
+#include "colorramp.h"
 
 /* Whitepoint values for temperatures at 100K intervals.
    These will be interpolated for the actual temperature.
    This table was provided by Ingo Thies, 2013. See
    the file README-colorramp for more information. */
-static const float blackbody_color[] = {
+static constexpr float blackbody_color[] =
+{
 	1.00000000,  0.18172716,  0.00000000, /* 1000K */
 	1.00000000,  0.25503671,  0.00000000, /* 1100K */
 	1.00000000,  0.30942099,  0.00000000, /* 1200K */
@@ -274,7 +274,7 @@ static const float blackbody_color[] = {
 
 
 static void
-interpolate_color(float a, const float *c1, const float *c2, float *c)
+interpolate_color(const float a, const float *c1, const float *c2, float *c)
 {
 	c[0] = (1.0-a)*c1[0] + a*c2[0];
 	c[1] = (1.0-a)*c1[1] + a*c2[1];
