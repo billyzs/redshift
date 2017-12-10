@@ -67,6 +67,7 @@ int poll(struct pollfd *fds, int nfds, int timeout) { abort(); return -1; }
 # define gettext(s) s
 #endif
 
+#include <algorithm>
 #include <yellowstone/systemtime.hpp>
 #include <yellowstone/solar.hpp>
 #include <yellowstone/location-provider.hpp>
@@ -115,16 +116,6 @@ extern "C" {
 #ifdef ENABLE_CORELOCATION
 # include "location-corelocation.h"
 #endif
-
-#undef CLAMP
-// #define CLAMP(lo,mid,up)  (((lo) > (mid)) ? (lo) : (((mid) < (up)) ? (mid) : (up)))
-
-//TODO write tests, move to header
-//TODO make compatible with r- & lvalue references
-template<typename L, typename M, typename U>
-constexpr auto CLAMP(const L lo, const M mid, const U up) noexcept {
-	return (((lo) > (mid)) ? (lo) : (((mid) < (up)) ? (mid) : (up)));
-}
 
 /* Bounds for parameters. */
 constexpr float     MIN_LAT         {-90.0};
@@ -281,7 +272,7 @@ interpolate_color_settings(const color_setting_t *first,
                            const color_setting_t *second,
                            const double& alpha, color_setting_t *result) noexcept
 {
-	double alpha1 = CLAMP(0.0, alpha, 1.0);
+	double alpha1 = std::clamp(0.0, alpha, 1.0);
 
 	result->temperature = (1.0-alpha1)*first->temperature +
 		alpha1*second->temperature;
@@ -302,7 +293,7 @@ interpolate_transition_scheme(const transition_scheme_t *transition,
 {
 	const color_setting_t *day = &transition->day;
 	const color_setting_t *night = &transition->night;
-	interpolate_color_settings(night, day, CLAMP(0.0, alpha, 1.0), result);
+	interpolate_color_settings(night, day, std::clamp(0.0, alpha, 1.0), result);
 }
 
 /* Return 1 if color settings have major differences, otherwise 0.
@@ -784,7 +775,7 @@ run_continual_mode(const location_provider_t *provider,
 			// double alpha = CLAMP(0.0, ease_fade(frac), 1.0);
 
 			interpolate_color_settings(
-				&fade_start_interp, &target_interp, CLAMP(0.0, ease_fade(frac), 1.0),
+				&fade_start_interp, &target_interp, std::clamp(0.0, ease_fade(frac), 1.0),
 				&interp);
 
 			if (fade_time > fade_length) {
