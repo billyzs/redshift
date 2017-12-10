@@ -68,7 +68,7 @@ int poll(struct pollfd *fds, int nfds, int timeout) { abort(); return -1; }
 #endif
 
 #include <yellowstone/systemtime.hpp>
-#include "solar.hpp"
+#include <yellowstone/solar.hpp>
 extern "C" {
 #include "redshift.h"
 #include "config-ini.h"
