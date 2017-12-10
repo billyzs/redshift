@@ -21,6 +21,7 @@
 #define REDSHIFT_OPTIONS_H
 
 #include "redshift.h"
+#include <yellowstone/location-provider.hpp>
 
 typedef struct {
 	/* Path to config file */

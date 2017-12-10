@@ -21,6 +21,7 @@
 #define REDSHIFT_LOCATION_MANUAL_H
 
 #include "redshift.h"
+#include <yellowstone/location-provider.hpp>
 
 extern const location_provider_t manual_location_provider;
 

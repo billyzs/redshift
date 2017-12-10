@@ -21,6 +21,7 @@
 #define REDSHIFT_LOCATION_GEOCLUE2_H
 
 #include "redshift.h"
+#include <yellowstone/location-provider.hpp>
 
 extern const location_provider_t geoclue2_location_provider;
 
