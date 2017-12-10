@@ -57,4 +57,3 @@ typedef struct {
 	location_provider_get_fd_func *get_fd;
 	location_provider_handle_func *handle;
 } location_provider_t;
-
