@@ -32,7 +32,7 @@
 # include <windows.h>
 #endif
 
-#include "systemtime.hpp"
+#include <yellowstone/systemtime.hpp>
 
 /* Return current time in T as the number of seconds since the epoch. */
 using namespace std::chrono;

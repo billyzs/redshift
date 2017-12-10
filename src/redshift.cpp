@@ -67,7 +67,7 @@ int poll(struct pollfd *fds, int nfds, int timeout) { abort(); return -1; }
 # define gettext(s) s
 #endif
 
-#include "systemtime.hpp"
+#include <yellowstone/systemtime.hpp>
 #include "solar.hpp"
 extern "C" {
 #include "redshift.h"
