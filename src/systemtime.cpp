@@ -36,7 +36,7 @@
 
 /* Return current time in T as the number of seconds since the epoch. */
 using namespace std::chrono;
-int systemtime_get_time(int64_t& t) noexcept
+int systemtime_get_time(int64_t& t)
 {
 	//TODO verify on other platform
 	//TODO unit test

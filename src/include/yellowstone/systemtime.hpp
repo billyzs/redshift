@@ -20,8 +20,15 @@
 #ifndef REDSHIFT_SYSTEMTIME_H
 #define REDSHIFT_SYSTEMTIME_H
 
-
-int systemtime_get_time(int64_t &now) noexcept;
+/**
+ * @brief calculates the time in seconds since unix epoch
+ * @param[out] now: the output
+ * @return < 0 if errored
+ */
+int systemtime_get_time(int64_t &now);
+/** @brief sleep for X millisecondss
+ * @param msecs
+ */
 void systemtime_msleep(const unsigned int &msecs);
 
 #endif /* ! REDSHIFT_SYSTEMTIME_H */
