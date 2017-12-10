@@ -27,13 +27,13 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#ifdef ENABLE_NLS
-# include <libintl.h>
-# define _(s) gettext(s)
-#else
+//#ifdef ENABLE_NLS
+//# include <libintl.h>
+//# define _(s) gettext(s)
+//#else
+//# define _(s) s
+//#endif
 # define _(s) s
-#endif
-
 #ifndef O_CLOEXEC
   #define O_CLOEXEC  02000000
 #endif

@@ -22,13 +22,13 @@
 #include <stdint.h>
 #include <string.h>
 
-#ifdef ENABLE_NLS
-# include <libintl.h>
-# define _(s) gettext(s)
-#else
+//#ifdef ENABLE_NLS
+//# include <libintl.h>
+//# define _(s) gettext(s)
+//#else
+//# define _(s) s
+//#endif
 # define _(s) s
-#endif
-
 #include <X11/Xlib.h>
 #include <X11/extensions/xf86vmode.h>
 

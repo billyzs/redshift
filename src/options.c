@@ -31,13 +31,13 @@
 #include <errno.h>
 #include <math.h>
 
-#ifdef ENABLE_NLS
-# include <libintl.h>
-# define _(s) gettext(s)
-#else
+//#ifdef ENABLE_NLS
+//# include <libintl.h>
+//# define _(s) gettext(s)
+//#else
+//# define _(s) s
+//#endif
 # define _(s) s
-#endif
-
 #include "redshift.h"
 #include "config-ini.h"
 #include "options.h"

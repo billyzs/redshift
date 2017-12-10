@@ -26,13 +26,13 @@
 #include <windows.h>
 #include <wingdi.h>
 
-#ifdef ENABLE_NLS
-# include <libintl.h>
-# define _(s) gettext(s)
-#else
-# define _(s) s
-#endif
-
+//#ifdef ENABLE_NLS
+//# include <libintl.h>
+//# define _(s) gettext(s)
+//#else
+//# define _(s) s
+//#endif
+#define _(s) s
 #include "gamma-w32gdi.h"
 #include <yellowstone/colorramp.hpp>
 

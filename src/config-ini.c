@@ -31,12 +31,13 @@
 
 #include "config-ini.h"
 
-#ifdef ENABLE_NLS
-# include <libintl.h>
-# define _(s) gettext(s)
-#else
+//#ifdef ENABLE_NLS
+//# include <libintl.h>
+//# define _(s) gettext(s)
+//#else
+//# define _(s) s
+//#endif
 # define _(s) s
-#endif
 
 #define MAX_CONFIG_PATH  4096
 #define MAX_LINE_LENGTH   512

@@ -23,13 +23,13 @@
 #include <string.h>
 #include <errno.h>
 
-#ifdef ENABLE_NLS
-# include <libintl.h>
-# define _(s) gettext(s)
-#else
+//#ifdef ENABLE_NLS
+//# include <libintl.h>
+//# define _(s) gettext(s)
+//#else
+//# define _(s) s
+//#endif
 # define _(s) s
-#endif
-
 #include <xcb/xcb.h>
 #include <xcb/randr.h>
 
