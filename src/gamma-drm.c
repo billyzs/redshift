@@ -42,7 +42,7 @@
 #include <xf86drmMode.h>
 
 #include "gamma-drm.h"
-#include "colorramp.h"
+#include <yellowstone/colorramp.hpp>
 
 
 typedef struct {

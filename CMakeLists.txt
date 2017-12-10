@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.2)
 
-project(REDSHIFT)
+project(yellowstone)
 
 
 subdirs(src)

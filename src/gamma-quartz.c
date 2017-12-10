@@ -34,7 +34,7 @@
 #endif
 
 #include "gamma-quartz.h"
-#include "colorramp.h"
+#include <yellowstone/colorramp.hpp>
 
 
 typedef struct {

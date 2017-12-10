@@ -20,13 +20,18 @@
 
 #include <stdint.h>
 #include <math.h>
-#include "colorramp.h"
+#include <array>
+#include <algorithm>
+#include <yellowstone/colorramp.hpp>
+// #include "colorramp.h"
 
 /* Whitepoint values for temperatures at 100K intervals.
    These will be interpolated for the actual temperature.
    This table was provided by Ingo Thies, 2013. See
    the file README-colorramp for more information. */
-static constexpr float blackbody_color[] =
+
+// TODO there's gotta be a way to initialize an array from a constexpr initializer list without having to know how long it is...
+static constexpr std::array<double, 726> blackbody_color =
 {
 	1.00000000,  0.18172716,  0.00000000, /* 1000K */
 	1.00000000,  0.25503671,  0.00000000, /* 1100K */
@@ -273,14 +278,6 @@ static constexpr float blackbody_color[] =
 };
 
 
-static void
-interpolate_color(const float a, const float *c1, const float *c2, float *c)
-{
-	c[0] = (1.0-a)*c1[0] + a*c2[0];
-	c[1] = (1.0-a)*c1[1] + a*c2[1];
-	c[2] = (1.0-a)*c1[2] + a*c2[2];
-}
-
 /* Helper macro used in the fill functions */
 #define F(Y, C)  pow((Y) * setting->brightness * \
 		     white_point[C], 1.0/setting->gamma[C])
@@ -290,11 +287,18 @@ colorramp_fill(uint16_t *gamma_r, uint16_t *gamma_g, uint16_t *gamma_b,
 	       int size, const color_setting_t *setting)
 {
 	/* Approximate white point */
-	float white_point[3];
-	float alpha = (setting->temperature % 100) / 100.0;
-	int temp_index = ((setting->temperature - 1000) / 100)*3;
-	interpolate_color(alpha, &blackbody_color[temp_index],
-			  &blackbody_color[temp_index+3], white_point);
+	std::array<double ,3> white_point;
+	const double alpha = (setting->temperature % 100) / 100.0;
+	//std::array<double, 3> white_point;
+	const auto temp_index{(static_cast<size_t>((setting->temperature - 1000) / 100) * 3)};
+	auto interpolate_color_func = [alpha](const double& c1, const double& c2) noexcept {
+		return (1.0 - alpha) * c1 + alpha * c2;
+	};
+	std::transform(std::next(blackbody_color.cbegin(), temp_index),     // start of 1st input array
+	               std::next(blackbody_color.cbegin(), temp_index + 3), // end of 1st input array
+	               std::next(blackbody_color.cbegin(), temp_index + 3), // start of 2nd input array
+	               white_point.begin(),                                 // start of output array
+	               interpolate_color_func);                             // transformation operation (binary)
 
 	for (int i = 0; i < size; i++) {
 		gamma_r[i] = F((double)gamma_r[i]/(UINT16_MAX+1), 0) *
@@ -306,22 +310,22 @@ colorramp_fill(uint16_t *gamma_r, uint16_t *gamma_g, uint16_t *gamma_b,
 	}
 }
 
-void
-colorramp_fill_float(float *gamma_r, float *gamma_g, float *gamma_b,
-		     int size, const color_setting_t *setting)
-{
-	/* Approximate white point */
-	float white_point[3];
-	float alpha = (setting->temperature % 100) / 100.0;
-	int temp_index = ((setting->temperature - 1000) / 100)*3;
-	interpolate_color(alpha, &blackbody_color[temp_index],
-			  &blackbody_color[temp_index+3], white_point);
-
-	for (int i = 0; i < size; i++) {
-		gamma_r[i] = F((double)gamma_r[i], 0);
-		gamma_g[i] = F((double)gamma_g[i], 1);
-		gamma_b[i] = F((double)gamma_b[i], 2);
-	}
-}
+//void
+//colorramp_fill_float(double *gamma_r, double *gamma_g, double *gamma_b,
+//                     int size, const color_setting_t *setting)
+//{
+//	/* Approximate white point */
+//	double white_point[3];
+//	double alpha = (setting->temperature % 100) / 100.0;
+//	int temp_index = ((setting->temperature - 1000) / 100)*3;
+//	interpolate_color(alpha, &blackbody_color[temp_index],
+//			  &blackbody_color[temp_index+3], white_point);
+//
+//	for (int i = 0; i < size; i++) {
+//		gamma_r[i] = F((double)gamma_r[i], 0);
+//		gamma_g[i] = F((double)gamma_g[i], 1);
+//		gamma_b[i] = F((double)gamma_b[i], 2);
+//	}
+//}
 
 #undef F

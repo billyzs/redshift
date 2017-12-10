@@ -43,7 +43,7 @@ typedef enum {
 
 /* Color setting */
 typedef struct {
-	int temperature;
+	int temperature; // TODO make sure it's larger than 1000
 	float gamma[3];
 	float brightness;
 } color_setting_t;

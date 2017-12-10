@@ -34,7 +34,7 @@
 #endif
 
 #include "gamma-w32gdi.h"
-#include "colorramp.h"
+#include <yellowstone/colorramp.hpp>
 
 #define GAMMA_RAMP_SIZE  256
 #define MAX_ATTEMPTS  10

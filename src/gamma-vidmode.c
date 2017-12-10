@@ -34,7 +34,7 @@
 
 #include "gamma-vidmode.h"
 #include "redshift.h"
-#include "colorramp.h"
+#include <yellowstone/colorramp.hpp>
 
 
 typedef struct {

@@ -35,7 +35,7 @@
 
 #include "gamma-randr.h"
 #include "redshift.h"
-#include "colorramp.h"
+#include <yellowstone/colorramp.hpp>
 
 
 #define RANDR_VERSION_MAJOR  1

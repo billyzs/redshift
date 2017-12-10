@@ -1,4 +1,4 @@
-include_directories(.)
+include_directories(include .)
 
 set(REDSHIFT_BASE_INCLUDE_DIR "${GLIBCONFIG_INCLUDE_DIR} ${GLIB_INCLUDE_DIRS} ${Libdrm_INCLUDE_DIRS}")
 # single-file libraries
