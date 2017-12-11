@@ -41,7 +41,7 @@ typedef struct {
 static int
 location_manual_init(location_manual_state_t **state)
 {
-	*state = malloc(sizeof(location_manual_state_t));
+	*state = reinterpret_cast<location_manual_state_t*>(malloc(sizeof(location_manual_state_t)));
 	if (*state == NULL) return -1;
 
 	location_manual_state_t *s = *state;
@@ -128,7 +128,7 @@ location_manual_handle(
 
 
 const location_provider_t manual_location_provider = {
-	"manual",
+	strdup("manual"),
 	(location_provider_init_func *)location_manual_init,
 	(location_provider_start_func *)location_manual_start,
 	(location_provider_free_func *)location_manual_free,
