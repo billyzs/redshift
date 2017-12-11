@@ -24,7 +24,7 @@
 #include <errno.h>
 
 #include "location-manual.h"
-
+#include <yellowstone/location-provider-impl.hpp>
 //#ifdef ENABLE_NLS
 //# include <libintl.h>
 //# define _(s) gettext(s)
@@ -37,6 +37,7 @@ typedef struct {
 	location_t loc;
 } location_manual_state_t;
 
+static auto uPtrLPM = std::make_unique<LocationProviderManual>();
 
 static int
 location_manual_init(location_manual_state_t **state)
@@ -48,6 +49,11 @@ location_manual_init(location_manual_state_t **state)
 	s->loc.lat = NAN;
 	s->loc.lon = NAN;
 
+	location_T loc{};
+	loc.setLon(42.0);
+	loc.setLat(71.0);
+	const auto opt = LocationProviderOption(std::move(loc));
+	uPtrLPM = std::make_unique<LocationProviderManual>(opt);
 	return 0;
 }
 
@@ -60,12 +66,14 @@ location_manual_start(location_manual_state_t *state)
 		exit(EXIT_FAILURE);
 	}
 
+	uPtrLPM->init();
 	return 0;
 }
 
 static void
 location_manual_free(location_manual_state_t *state)
 {
+
 	free(state);
 }
 
@@ -83,6 +91,7 @@ location_manual_print_help(FILE *f)
 	fputs(_("Both values are expected to be floating point numbers,\n"
 		"negative values representing west / south, respectively.\n"), f);
 	fputs("\n", f);
+	uPtrLPM->printHelp();
 }
 
 static int
@@ -100,8 +109,10 @@ location_manual_set_option(location_manual_state_t *state, const char *key,
 
 	if (strcasecmp(key, "lat") == 0) {
 		state->loc.lat = v;
+		uPtrLPM->setLat(static_cast<double>(v));
 	} else if (strcasecmp(key, "lon") == 0) {
 		state->loc.lon = v;
+		uPtrLPM->setLon(static_cast<double>(v));
 	} else {
 		fprintf(stderr, _("Unknown method parameter: `%s'.\n"), key);
 		return -1;
