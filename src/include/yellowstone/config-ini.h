@@ -17,9 +17,10 @@
    Copyright (c) 2010  Jon Lund Steffensen <jonlst@gmail.com>
 */
 
-#ifndef REDSHIFT_CONFIG_INI_H
-#define REDSHIFT_CONFIG_INI_H
-
+#pragma once
+#ifdef __cplusplus
+extern "C" {
+#endif
 typedef struct _config_ini_section config_ini_section_t;
 typedef struct _config_ini_setting config_ini_setting_t;
 
@@ -41,9 +42,12 @@ typedef struct {
 
 
 int config_ini_init(config_ini_state_t *state, const char *filepath);
+
 void config_ini_free(config_ini_state_t *state);
 
 config_ini_section_t *config_ini_get_section(config_ini_state_t *state,
-					     const char *name);
+                                             const char *name);
 
-#endif /* ! REDSHIFT_CONFIG_INI_H */
+#ifdef __cplusplus
+}
+#endif

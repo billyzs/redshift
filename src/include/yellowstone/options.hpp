@@ -17,11 +17,11 @@
    Copyright (c) 2017  Jon Lund Steffensen <jonlst@gmail.com>
 */
 
-#ifndef REDSHIFT_OPTIONS_H
-#define REDSHIFT_OPTIONS_H
+#pragma once
 
 #include "redshift.h"
 #include <yellowstone/location-provider.hpp>
+#include "config-ini.h"
 
 typedef struct {
 	/* Path to config file */
@@ -60,5 +60,3 @@ void options_parse_config_file(
 	const gamma_method_t *gamma_methods,
 	const location_provider_t *location_providers);
 void options_set_defaults(options_t *options);
-
-#endif /* ! REDSHIFT_OPTIONS_H */

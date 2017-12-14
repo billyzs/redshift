@@ -74,12 +74,12 @@ int poll(struct pollfd *fds, int nfds, int timeout) { abort(); return -1; }
 #include <yellowstone/solar.hpp>
 #include <yellowstone/location-provider.hpp>
 #include <yellowstone/location-provider-impl.hpp>
+#include <yellowstone/options.hpp>
 extern "C" {
 #include "redshift.h"
-#include "config-ini.h"
+#include <yellowstone/config-ini.h>
 #include "hooks.h"
 #include "signals.h"
-#include "options.h"
 }
 /* pause() is not defined on windows platform but is not needed either.
    Use a noop macro instead. */

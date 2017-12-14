@@ -21,7 +21,7 @@ set(REDSHIFT_BASE_INCLUDE_DIR "${GLIBCONFIG_INCLUDE_DIR} ${GLIB_INCLUDE_DIRS} ${
 
 # file(GLOB SOURCES "./*.c")
 set (SOURCES colorramp.cpp
-        config-ini.c gamma-dummy.c gamma-drm.c gamma-randr.c hooks.c location-geoclue2.c location-manual.cpp options.c pipeutils.c redshift.cpp signals.c  solar.cpp systemtime.cpp location-provider-impl.cpp)
+        config-ini.c gamma-dummy.c gamma-drm.c gamma-randr.c hooks.c location-geoclue2.c location-manual.cpp options.cpp pipeutils.c redshift.cpp signals.c  solar.cpp systemtime.cpp location-provider-impl.cpp)
 set (REDSHIFT_LIBS ${Libdrm_LIBRARIES} ${XCB_LIBRARIES} ${GLIB_LIBRARIES}
         ${GLIB_GOBJECT_LIBRARIES} ${GLIB_GTHREAD_LIBRARIES} ${GLIB_GMODULE_LIBRARIES}
         ${GLIB_GIO_LIBRARIES} m)

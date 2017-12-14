@@ -39,8 +39,8 @@
 //#endif
 # define _(s) s
 #include "redshift.h"
-#include "config-ini.h"
-#include "options.h"
+#include <yellowstone/config-ini.h>
+#include <yellowstone/options.hpp>
 #include <yellowstone/solar.hpp>
 
 /* Angular elevation of the sun at which the color temperature
@@ -61,7 +61,7 @@
    or two values separated by a colon. */
 static void
 parse_brightness_string(
-	const char *str, float *bright_day, float *bright_night)
+		char *str, float *bright_day, float *bright_night)
 {
 	char *s = strchr(str, ':');
 	if (s == NULL) {
@@ -77,7 +77,7 @@ parse_brightness_string(
 /* A gamma string contains either one floating point value,
    or three values separated by colon. */
 static int
-parse_gamma_string(const char *str, float gamma[])
+parse_gamma_string(char *str, float *gamma)
 {
 	char *s = strchr(str, ':');
 	if (s == NULL) {
@@ -103,7 +103,7 @@ parse_gamma_string(const char *str, float gamma[])
 /* Parse transition time string e.g. "04:50". Returns negative on failure,
    otherwise the parsed time is returned as seconds since midnight. */
 static int
-parse_transition_time(const char *str, const char **end)
+parse_transition_time(char *str, char **end)
 {
 	const char *min = NULL;
 	errno = 0;
@@ -127,9 +127,9 @@ parse_transition_time(const char *str, const char **end)
    failure, otherwise zero. Parsed start and end times are returned as seconds
    since midnight. */
 static int
-parse_transition_range(const char *str, time_range_t *range)
+parse_transition_range(char *str, time_range_t *range)
 {
-	const char *next = NULL;
+	char *next = NULL;
 	int start_time = parse_transition_time(str, &next);
 	if (start_time < 0) return -1;
 
@@ -138,7 +138,7 @@ parse_transition_range(const char *str, time_range_t *range)
 		end_time = start_time;
 	} else if (next[0] == '-') {
 		next += 1;
-		const char *end = NULL;
+		char *end = NULL;
 		end_time = parse_transition_time(next, &end);
 		if (end_time < 0 || end[0] != '\0') return -1;
 	} else {
@@ -339,17 +339,17 @@ parse_command_line_option(
 	int r;
 	char *s;
 
-	switch (option) {
-	case 'b':
+	if ('b' == option) {
 		parse_brightness_string(
-			value, &options->scheme.day.brightness,
-			&options->scheme.night.brightness);
-		break;
-	case 'c':
+				value, &options->scheme.day.brightness,
+				&options->scheme.night.brightness);
+	}
+	else if ('c' == option) {
 		free(options->config_filepath);
 		options->config_filepath = strdup(value);
-		break;
-	case 'g':
+	}
+	else if ('g' == option) {
+
 		r = parse_gamma_string(value, options->scheme.day.gamma);
 		if (r < 0) {
 			fputs(_("Malformed gamma argument.\n"), stderr);
@@ -363,19 +363,21 @@ parse_command_line_option(
 		memcpy(options->scheme.night.gamma,
 		       options->scheme.day.gamma,
 		       sizeof(options->scheme.night.gamma));
-		break;
-	case 'h':
+	}
+	else if ('h' == option) {
+
 		print_help(program_name);
 		exit(EXIT_SUCCESS);
-		break;
-	case 'l':
+	}
+	else if ('l' == option) {
+
 		/* Print list of providers if argument is `list' */
 		if (strcasecmp(value, "list") == 0) {
 			print_provider_list(location_providers);
 			exit(EXIT_SUCCESS);
 		}
 
-		char *provider_name = NULL;
+		const char *provider_name = NULL;
 
 		/* Don't save the result of strtof(); we simply want
 		   to know if value can be parsed as a float. */
@@ -399,10 +401,10 @@ parse_command_line_option(
 
 		/* Lookup provider from name. */
 		options->provider = find_location_provider(
-			location_providers, provider_name);
+				location_providers, provider_name);
 		if (options->provider == NULL) {
 			fprintf(stderr, _("Unknown location provider `%s'.\n"),
-				provider_name);
+			        provider_name);
 			return -1;
 		}
 
@@ -412,8 +414,8 @@ parse_command_line_option(
 			options->provider->print_help(stdout);
 			exit(EXIT_SUCCESS);
 		}
-		break;
-	case 'm':
+	}
+	else if ('m' == option) {
 		/* Print list of methods if argument is `list' */
 		if (strcasecmp(value, "list") == 0) {
 			print_method_list(gamma_methods);
@@ -433,7 +435,7 @@ parse_command_line_option(
 			/* TRANSLATORS: This refers to the method
 			   used to adjust colors e.g VidMode */
 			fprintf(stderr, _("Unknown adjustment method `%s'.\n"),
-				value);
+			        value);
 			return -1;
 		}
 
@@ -443,24 +445,25 @@ parse_command_line_option(
 			options->method->print_help(stdout);
 			exit(EXIT_SUCCESS);
 		}
-		break;
-	case 'o':
+	}
+
+	else if ('o' == option) {
 		options->mode = PROGRAM_MODE_ONE_SHOT;
-		break;
-	case 'O':
+	}
+	else if ('O' == option) {
 		options->mode = PROGRAM_MODE_MANUAL;
 		options->temp_set = atoi(value);
-		break;
-	case 'p':
+	}
+	else if ('p' == option) {
 		options->mode = PROGRAM_MODE_PRINT;
-		break;
-	case 'P':
+	}
+	else if ('P' == option) {
 		options->preserve_gamma = 0;
-		break;
-	case 'r':
+	}
+	else if ('r' == option) {
 		options->use_fade = 0;
-		break;
-	case 't':
+	}
+	else if ('t' == option) {
 		s = strchr(value, ':');
 		if (s == NULL) {
 			fputs(_("Malformed temperature argument.\n"), stderr);
@@ -470,22 +473,22 @@ parse_command_line_option(
 		*(s++) = '\0';
 		options->scheme.day.temperature = atoi(value);
 		options->scheme.night.temperature = atoi(s);
-		break;
-	case 'v':
+	}
+	else if ('v' == option) {
 		options->verbose = 1;
-		break;
-	case 'V':
+	}
+	else if ('V' == option) {
 		printf("%s\n", PACKAGE_STRING);
 		exit(EXIT_SUCCESS);
-		break;
-	case 'x':
+	}
+	else if ('x' == option) {
 		options->mode = PROGRAM_MODE_RESET;
-		break;
-	case '?':
+	}
+	else { // if ('?' == option)
 		fputs(_("Try `-h' for more information.\n"), stderr);
 		return -1;
-		break;
 	}
+
 
 	return 0;
 }
@@ -511,9 +514,9 @@ options_parse_args(
 /* Parse a single key-value pair from the configuration file. */
 static int
 parse_config_file_option(
-	const char *key, const char *value, options_t *options,
-	const gamma_method_t *gamma_methods,
-	const location_provider_t *location_providers)
+		char *key, char *value, options_t *options,
+		const gamma_method_t *gamma_methods,
+		const location_provider_t *location_providers)
 {
 	if (strcasecmp(key, "temp-day") == 0) {
 		if (options->scheme.day.temperature < 0) {

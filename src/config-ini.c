@@ -29,7 +29,7 @@
 # include <pwd.h>
 #endif
 
-#include "config-ini.h"
+#include <yellowstone/config-ini.h>
 
 //#ifdef ENABLE_NLS
 //# include <libintl.h>
