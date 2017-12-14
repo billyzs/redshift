@@ -39,29 +39,21 @@
 //#endif
 # define _(s) s
 #include "redshift.h"
-#include <yellowstone/config-ini.h>
 #include <yellowstone/options.hpp>
-#include <yellowstone/solar.hpp>
 
-/* Angular elevation of the sun at which the color temperature
-   transition period starts and ends (in degress).
-   Transition during twilight, and while the sun is lower than
-   3.0 degrees above the horizon. */
-#define TRANSITION_LOW     SOLAR_CIVIL_TWILIGHT_ELEV
-#define TRANSITION_HIGH    3.0
-
-/* Default values for parameters. */
-#define DEFAULT_DAY_TEMP    6500
-#define DEFAULT_NIGHT_TEMP  4500
-#define DEFAULT_BRIGHTNESS   1.0
-#define DEFAULT_GAMMA        1.0
-
+void Options::init() {
+	scheme.day.temperature = -1;
+	scheme.day.gamma[0] = NAN;
+	scheme.day.brightness = NAN;
+	scheme.night.temperature = -1;
+	scheme.night.gamma[0] = NAN;
+	scheme.night.brightness = NAN;
+}
 
 /* A brightness string contains either one floating point value,
    or two values separated by a colon. */
 static void
-parse_brightness_string(
-		char *str, float *bright_day, float *bright_night)
+parse_brightness_string(char *str, float *bright_day, float *bright_night)
 {
 	char *s = strchr(str, ':');
 	if (s == NULL) {
@@ -127,7 +119,7 @@ parse_transition_time(char *str, char **end)
    failure, otherwise zero. Parsed start and end times are returned as seconds
    since midnight. */
 static int
-parse_transition_range(char *str, time_range_t *range)
+parse_transition_range(char *str, TimeRange *range)
 {
 	char *next = NULL;
 	int start_time = parse_transition_time(str, &next);
@@ -288,51 +280,22 @@ find_location_provider(
 }
 
 
-/* Initialize options struct. */
-void
-options_init(options_t *options)
-{
-	options->config_filepath = NULL;
-
-	/* Default elevation values. */
-	options->scheme.high = TRANSITION_HIGH;
-	options->scheme.low = TRANSITION_LOW;
-
-	/* Settings for day, night and transition period.
-	   Initialized to indicate that the values are not set yet. */
-	options->scheme.use_time = 0;
-	options->scheme.dawn.start = -1;
-	options->scheme.dawn.end = -1;
-	options->scheme.dusk.start = -1;
-	options->scheme.dusk.end = -1;
-
-	options->scheme.day.temperature = -1;
-	options->scheme.day.gamma[0] = NAN;
-	options->scheme.day.brightness = NAN;
-
-	options->scheme.night.temperature = -1;
-	options->scheme.night.gamma[0] = NAN;
-	options->scheme.night.brightness = NAN;
-
-	/* Temperature for manual mode */
-	options->temp_set = -1;
-
-	options->method = NULL;
-	options->method_args = NULL;
-
-	options->provider = NULL;
-	options->provider_args = NULL;
-
-	options->use_fade = -1;
-	options->preserve_gamma = 1;
-	options->mode = PROGRAM_MODE_CONTINUAL;
-	options->verbose = 0;
-}
+///* Initialize options struct. */
+//void
+//options_init(Options *options) {
+//	options->scheme.day.temperature = -1;
+//	options->scheme.day.gamma[0] = NAN;
+//	options->scheme.day.brightness = NAN;
+//
+//	options->scheme.night.temperature = -1;
+//	options->scheme.night.gamma[0] = NAN;
+//	options->scheme.night.brightness = NAN;
+//}
 
 /* Parse a single option from the command-line. */
 static int
 parse_command_line_option(
-	const char option, char *value, options_t *options,
+	const char option, char *value, Options *options,
 	const char *program_name, const gamma_method_t *gamma_methods,
 	const location_provider_t *location_providers)
 {
@@ -448,20 +411,20 @@ parse_command_line_option(
 	}
 
 	else if ('o' == option) {
-		options->mode = PROGRAM_MODE_ONE_SHOT;
+		options->mode = ProgramMode::OneShot;
 	}
 	else if ('O' == option) {
-		options->mode = PROGRAM_MODE_MANUAL;
-		options->temp_set = atoi(value);
+		options->mode = ProgramMode::Manual;
+		options->tempManual = atoi(value);
 	}
 	else if ('p' == option) {
-		options->mode = PROGRAM_MODE_PRINT;
+		options->mode = ProgramMode::Print;
 	}
 	else if ('P' == option) {
-		options->preserve_gamma = 0;
+		options->preserveGamma = false;
 	}
 	else if ('r' == option) {
-		options->use_fade = 0;
+		options->useFade = false;
 	}
 	else if ('t' == option) {
 		s = strchr(value, ':');
@@ -475,14 +438,14 @@ parse_command_line_option(
 		options->scheme.night.temperature = atoi(s);
 	}
 	else if ('v' == option) {
-		options->verbose = 1;
+		options->verbose = true;
 	}
 	else if ('V' == option) {
 		printf("%s\n", PACKAGE_STRING);
 		exit(EXIT_SUCCESS);
 	}
 	else if ('x' == option) {
-		options->mode = PROGRAM_MODE_RESET;
+		options->mode = ProgramMode::Reset;
 	}
 	else { // if ('?' == option)
 		fputs(_("Try `-h' for more information.\n"), stderr);
@@ -496,7 +459,7 @@ parse_command_line_option(
 /* Parse command line arguments. */
 void
 options_parse_args(
-	options_t *options, int argc, char *argv[],
+	Options *options, int argc, char *argv[],
 	const gamma_method_t *gamma_methods,
 	const location_provider_t *location_providers)
 {
@@ -514,7 +477,7 @@ options_parse_args(
 /* Parse a single key-value pair from the configuration file. */
 static int
 parse_config_file_option(
-		char *key, char *value, options_t *options,
+		char *key, char *value, Options *options,
 		const gamma_method_t *gamma_methods,
 		const location_provider_t *location_providers)
 {
@@ -530,8 +493,8 @@ parse_config_file_option(
 		   strcasecmp(key, "fade") == 0) {
 		/* "fade" is preferred, "transition" is
 		   deprecated as the setting key. */
-		if (options->use_fade < 0) {
-			options->use_fade = !!atoi(value);
+		if (!(options->useFade)) {
+			options->useFade = true;
 		}
 	} else if (strcasecmp(key, "brightness") == 0) {
 		if (isnan(options->scheme.day.brightness)) {
@@ -633,7 +596,7 @@ parse_config_file_option(
 /* Parse options defined in the config file. */
 void
 options_parse_config_file(
-	options_t *options, config_ini_state_t *config_state,
+	Options *options, config_ini_state_t *config_state,
 	const gamma_method_t *gamma_methods,
 	const location_provider_t *location_providers)
 {
@@ -655,7 +618,7 @@ options_parse_config_file(
 
 /* Replace unspecified options with default values. */
 void
-options_set_defaults(options_t *options)
+options_set_defaults(Options *options)
 {
 	if (options->scheme.day.temperature < 0) {
 		options->scheme.day.temperature = DEFAULT_DAY_TEMP;
@@ -682,5 +645,5 @@ options_set_defaults(options_t *options)
 		options->scheme.night.gamma[2] = DEFAULT_GAMMA;
 	}
 
-	if (options->use_fade < 0) options->use_fade = 1;
+	options->useFade = true;
 }

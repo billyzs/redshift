@@ -120,19 +120,19 @@ extern "C" {
 #endif
 
 /* Bounds for parameters. */
-constexpr u_int16_t MIN_TEMP        {1000};
-constexpr u_int16_t MAX_TEMP        {25000};
+constexpr uint16_t MIN_TEMP        {1000};
+constexpr uint16_t MAX_TEMP        {25000};
 constexpr float     MIN_BRIGHTNESS  {0.1};
 constexpr float     MAX_BRIGHTNESS  {1.0};
 constexpr float     MIN_GAMMA       {0.1};
 constexpr float     MAX_GAMMA       {10.0};
 
 /* Duration of sleep between screen updates (milliseconds). */
-constexpr u_int16_t SLEEP_DURATION_MS        {5000};
-constexpr u_int16_t SLEEP_DURATION_SHORT_MS  {100};
+constexpr uint16_t SLEEP_DURATION_MS        {5000};
+constexpr uint16_t SLEEP_DURATION_SHORT_MS  {100};
 
 /* Length of fade in numbers of short sleep durations. */
-constexpr u_int16_t FADE_LENGTH              {40};
+constexpr uint16_t FADE_LENGTH              {40};
 
 
 /* Names of periods of day */
@@ -147,7 +147,7 @@ constexpr u_int16_t FADE_LENGTH              {40};
 
 /* Determine which period we are currently in based on time offset. */
 static constexpr period_t
-get_period_from_time(const transition_scheme_t *transition, const int& time_offset) noexcept
+get_period_from_time(const TransitionScheme *transition, const int& time_offset) noexcept
 {
 	if (time_offset < transition->dawn.start || time_offset >= transition->dusk.end) {
 		return PERIOD_NIGHT;
@@ -162,7 +162,7 @@ get_period_from_time(const transition_scheme_t *transition, const int& time_offs
 
 /* Determine which period we are currently in based on solar elevation. */
 static constexpr
-period_t get_period_from_elevation(const transition_scheme_t *transition, const double& elevation) noexcept
+period_t get_period_from_elevation(const TransitionScheme *transition, const double& elevation) noexcept
 {
 	if (elevation < transition->low) {
 		return PERIOD_NIGHT;
@@ -177,7 +177,7 @@ period_t get_period_from_elevation(const transition_scheme_t *transition, const 
 
 /* Determine how far through the transition we are based on time offset. */
 static constexpr double
-get_transition_progress_from_time(const transition_scheme_t *transition,
+get_transition_progress_from_time(const TransitionScheme *transition,
                                   const int& time_offset) noexcept
 {
 	if (time_offset < transition->dawn.start || time_offset >= transition->dusk.end) {
@@ -198,7 +198,7 @@ get_transition_progress_from_time(const transition_scheme_t *transition,
 
 /* Determine how far through the transition we are based on elevation. */
 static constexpr double
-get_transition_progress_from_elevation(const transition_scheme_t *transition,
+get_transition_progress_from_elevation(const TransitionScheme *transition,
                                        const double& elevation) noexcept
 {
 	if (elevation < transition->low) {
@@ -291,7 +291,7 @@ interpolate_color_settings(const color_setting_t *first,
 /* Interpolate color setting structs transition scheme. */
 //TODO make this take both r- & lvalue ref of alpha
 static void
-interpolate_transition_scheme(const transition_scheme_t *transition,
+interpolate_transition_scheme(const TransitionScheme *transition,
                               const double& alpha,
                               color_setting_t *result) noexcept
 {
@@ -611,11 +611,11 @@ ease_fade(double t) noexcept
    color temperature. */
 static int
 run_continual_mode(const location_provider_t *provider,
-		   location_state_t *location_state,
-		   const transition_scheme_t *scheme,
-		   const gamma_method_t *method,
-		   gamma_state_t *method_state,
-		   int use_fade, int preserve_gamma, int verbose)
+                   location_state_t *location_state,
+                   const TransitionScheme *scheme,
+                   const gamma_method_t *method,
+                   gamma_state_t *method_state,
+                   bool use_fade, bool preserve_gamma, bool verbose)
 {
 	int r;
 
@@ -642,7 +642,7 @@ run_continual_mode(const location_provider_t *provider,
 	color_setting_reset(&interp);
 
 	location_t loc = { NAN, NAN };
-	int need_location = !scheme->use_time;
+	bool need_location = !scheme->useTime;
 	if (need_location) {
 		/*fputs(_("Waiting for initial location"
 			" to become available...\n"), stderr);*/
@@ -711,7 +711,7 @@ run_continual_mode(const location_provider_t *provider,
 
 		period_t period;
 		double transition_prog;
-		if (scheme->use_time) {
+		if (scheme->useTime) {
 			int time_offset = get_seconds_since_midnight(now);
 
 			period = get_period_from_time(scheme, time_offset);
@@ -949,8 +949,8 @@ main(int argc, char *argv[])
 	setvbuf(stdout, NULL, _IOLBF, 0);
 	setvbuf(stderr, NULL, _IOLBF, 0);
 
-	options_t options;
-	options_init(&options);
+	Options options;
+	options.init();
 	options_parse_args(
 		&options, argc, argv, gamma_methods, location_providers);
 
@@ -988,7 +988,7 @@ main(int argc, char *argv[])
 			exit(EXIT_FAILURE);
 		}
 
-		options.scheme.use_time = 1;
+		options.scheme.useTime = true;
 	}
 
 	/* Initialize location provider if needed. If provider is NULL
@@ -997,9 +997,9 @@ main(int argc, char *argv[])
 
 	/* Location is not needed for reset mode and manual mode. */
 	int need_location =
-		options.mode != PROGRAM_MODE_RESET &&
-		options.mode != PROGRAM_MODE_MANUAL &&
-		!options.scheme.use_time;
+		options.mode != ProgramMode::Reset  &&
+		options.mode != ProgramMode::Manual &&
+		!options.scheme.useTime;
 	if (need_location) {
 		if (options.provider != NULL) {
 			/* Use provider specified on command line. */
@@ -1054,8 +1054,8 @@ main(int argc, char *argv[])
 		}
 	}
 
-	if (options.mode != PROGRAM_MODE_RESET &&
-	    options.mode != PROGRAM_MODE_MANUAL) {
+	if (options.mode != ProgramMode::Reset &&
+	    options.mode != ProgramMode::Manual) {
 		if (options.verbose) {
 //			printf(_("Temperatures: %dK at day, %dK at night\n"),
 //			       options.scheme.day.temperature,
@@ -1074,10 +1074,10 @@ main(int argc, char *argv[])
 		}
 	}
 
-	if (options.mode == PROGRAM_MODE_MANUAL) {
+	if (options.mode == ProgramMode::Manual) {
 		/* Check color temperature to be set */
-		if (options.temp_set < MIN_TEMP ||
-		    options.temp_set > MAX_TEMP) {
+		if (options.tempManual < MIN_TEMP ||
+		    options.tempManual > MAX_TEMP) {
 //			fprintf(stderr,
 //				_("Temperature must be between %uK and %uK.\n"),
 //				MIN_TEMP, MAX_TEMP);
@@ -1124,14 +1124,14 @@ main(int argc, char *argv[])
 //		       options.scheme.night.gamma[2]);
 	}
 
-	transition_scheme_t *scheme = &options.scheme;
+	TransitionScheme *scheme = &options.scheme;
 
 	/* Initialize gamma adjustment method. If method is NULL
 	   try all methods until one that works is found. */
 	gamma_state_t *method_state;
 
 	/* Gamma adjustment not needed for print mode */
-	if (options.mode != PROGRAM_MODE_PRINT) {
+	if (options.mode != ProgramMode::Print) {
 		if (options.method != NULL) {
 			/* Use method specified on command line. */
 			r = method_try_start(
@@ -1168,8 +1168,8 @@ main(int argc, char *argv[])
 	config_ini_free(&config_state);
 
 	switch (options.mode) {
-	case PROGRAM_MODE_ONE_SHOT:
-	case PROGRAM_MODE_PRINT:
+	case ProgramMode::OneShot:
+	case ProgramMode::Print:
 	{
 		location_t loc = { NAN, NAN };
 		if (need_location) {
@@ -1202,7 +1202,7 @@ main(int argc, char *argv[])
 
 		period_t period;
 		double transition_prog;
-		if (options.scheme.use_time) {
+		if (options.scheme.useTime) {
 			int time_offset = get_seconds_since_midnight(now);
 			period = get_period_from_time(scheme, time_offset);
 			transition_prog = get_transition_progress_from_time(
@@ -1227,7 +1227,7 @@ main(int argc, char *argv[])
 		interpolate_transition_scheme(
 			scheme, transition_prog, &interp);
 
-		if (options.verbose || options.mode == PROGRAM_MODE_PRINT) {
+		if (options.verbose || options.mode == ProgramMode::Print) {
 			print_period(period, transition_prog);
 //			printf(_("Color temperature: %uK\n"),
 //			       interp.temperature);
@@ -1235,10 +1235,10 @@ main(int argc, char *argv[])
 //			       interp.brightness);
 		}
 
-		if (options.mode != PROGRAM_MODE_PRINT) {
+		if (options.mode != ProgramMode::Print) {
 			/* Adjust temperature */
 			r = options.method->set_temperature(
-				method_state, &interp, options.preserve_gamma);
+				method_state, &interp, options.preserveGamma);
 			if (r < 0) {
 //				fputs(_("Temperature adjustment failed.\n"),
 //				      stderr);
@@ -1257,18 +1257,18 @@ main(int argc, char *argv[])
 		}
 	}
 	break;
-	case PROGRAM_MODE_MANUAL:
+	case ProgramMode::Manual:
 	{
 		if (options.verbose) {
 //			printf(_("Color temperature: %uK\n"),
-//			       options.temp_set);
+//			       options.tempManual);
 		}
 
 		/* Adjust temperature */
 		color_setting_t manual = scheme->day;
-		manual.temperature = options.temp_set;
+		manual.temperature = options.tempManual;
 		r = options.method->set_temperature(
-			method_state, &manual, options.preserve_gamma);
+			method_state, &manual, options.preserveGamma);
 		if (r < 0) {
 //			fputs(_("Temperature adjustment failed.\n"), stderr);
 			options.method->free(method_state);
@@ -1284,7 +1284,7 @@ main(int argc, char *argv[])
 		}
 	}
 	break;
-	case PROGRAM_MODE_RESET:
+	case ProgramMode::Reset:
 	{
 		/* Reset screen */
 		color_setting_t reset;
@@ -1306,12 +1306,12 @@ main(int argc, char *argv[])
 		}
 	}
 	break;
-	case PROGRAM_MODE_CONTINUAL:
+	case ProgramMode::Continual:
 	{
 		r = run_continual_mode(
 			options.provider, location_state, scheme,
 			options.method, method_state,
-			options.use_fade, options.preserve_gamma,
+			options.useFade, options.preserveGamma,
 			options.verbose);
 		if (r < 0) exit(EXIT_FAILURE);
 	}
@@ -1319,7 +1319,7 @@ main(int argc, char *argv[])
 	}
 
 	/* Clean up gamma adjustment state */
-	if (options.mode != PROGRAM_MODE_PRINT) {
+	if (options.mode != ProgramMode::Print) {
 		options.method->free(method_state);
 	}
 
