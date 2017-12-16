@@ -41,6 +41,25 @@
 #include "redshift.h"
 #include <yellowstone/options.hpp>
 
+#include <iostream>
+#include <functional>
+
+using argParseFunc = std::function<void(Options&,      // Options obj to modify
+                                        const char*)>; // value
+
+static argParseFunc parseVerbosity = [](Options& opt, const char* value) {
+	// don't care about value
+	if (nullptr != value) {
+		std::cerr << "verbosity setting does not need arguments; ignoring " << value
+		          << std::endl;
+	}
+	opt.verbose = true;
+};
+
+static auto parser = std::unordered_map<YellowStoneOption, argParseFunc> {
+		{YellowStoneOption::Verbose, parseVerbosity}
+};
+
 void Options::init() {
 	scheme.day.temperature = -1;
 	scheme.day.gamma[0] = NAN;
@@ -49,6 +68,36 @@ void Options::init() {
 	scheme.night.gamma[0] = NAN;
 	scheme.night.brightness = NAN;
 }
+
+void Options::setDefaults() {
+	if (scheme.day.temperature < 0) {
+		scheme.day.temperature = DEFAULT_DAY_TEMP_K;
+	}
+	if (scheme.night.temperature < 0) {
+		scheme.night.temperature = DEFAULT_NIGHT_TEMP_K;
+	}
+
+	if (isnan(scheme.day.brightness)) {
+		scheme.day.brightness = DEFAULT_BRIGHTNESS;
+	}
+	if (isnan(scheme.night.brightness)) {
+		scheme.night.brightness = DEFAULT_BRIGHTNESS;
+	}
+
+	if (isnan(scheme.day.gamma[0])) {
+		scheme.day.gamma[0] = DEFAULT_GAMMA;
+		scheme.day.gamma[1] = DEFAULT_GAMMA;
+		scheme.day.gamma[2] = DEFAULT_GAMMA;
+	}
+	if (isnan(scheme.night.gamma[0])) {
+		scheme.night.gamma[0] = DEFAULT_GAMMA;
+		scheme.night.gamma[1] = DEFAULT_GAMMA;
+		scheme.night.gamma[2] = DEFAULT_GAMMA;
+	}
+
+	useFade = true;
+}
+
 
 /* A brightness string contains either one floating point value,
    or two values separated by a colon. */
@@ -206,7 +255,7 @@ print_help(const char *program_name)
 	printf(_("Default values:\n\n"
 		 "  Daytime temperature: %uK\n"
 		 "  Night temperature: %uK\n"),
-	       DEFAULT_DAY_TEMP, DEFAULT_NIGHT_TEMP);
+	       DEFAULT_DAY_TEMP_K, DEFAULT_NIGHT_TEMP_K);
 
 	fputs("\n", stdout);
 
@@ -278,19 +327,6 @@ find_location_provider(
 
 	return provider;
 }
-
-
-///* Initialize options struct. */
-//void
-//options_init(Options *options) {
-//	options->scheme.day.temperature = -1;
-//	options->scheme.day.gamma[0] = NAN;
-//	options->scheme.day.brightness = NAN;
-//
-//	options->scheme.night.temperature = -1;
-//	options->scheme.night.gamma[0] = NAN;
-//	options->scheme.night.brightness = NAN;
-//}
 
 /* Parse a single option from the command-line. */
 static int
@@ -458,15 +494,35 @@ parse_command_line_option(
 
 /* Parse command line arguments. */
 void
-options_parse_args(
-	Options *options, int argc, char *argv[],
-	const gamma_method_t *gamma_methods,
-	const location_provider_t *location_providers)
+options_parse_args(Options *options, int argc, char *argv[],
+                   const gamma_method_t *gamma_methods, const location_provider_t *location_providers)
 {
+
+
+
+
 	const char* program_name = argv[0];
 	int opt;
-	while ((opt = getopt(argc, argv, "b:c:g:hl:m:oO:pPrt:vVx")) != -1) {
+	while ((opt = getopt(argc, argv, "b:c:g:hl:m:oO:pPrt:v:Vx")) != -1) {
 		char option = opt;
+		std::string optStr{option};
+		std::cout << "Program optStr: " << optStr << std::endl;
+		if (optarg) {
+			std::string argStr{optarg};
+			std::cout << "arg: " << argStr << std::endl;
+		}
+		// TODO use at(), try, catch
+		auto ysOption = cmdLineOptMapping.find(option);
+		if (ysOption != cmdLineOptMapping.end()) {
+			auto func = parser.find(ysOption->second);
+			if (func != parser.end()) {
+				func->second(*options, optarg);
+			}
+			else { // not a YellowStoneOption; is it a ProgramOption?
+
+			}
+		}
+
 		int r = parse_command_line_option(
 			option, optarg, options, program_name, gamma_methods,
 			location_providers);
@@ -614,36 +670,4 @@ options_parse_config_file(
 
 		setting = setting->next;
 	}
-}
-
-/* Replace unspecified options with default values. */
-void
-options_set_defaults(Options *options)
-{
-	if (options->scheme.day.temperature < 0) {
-		options->scheme.day.temperature = DEFAULT_DAY_TEMP;
-	}
-	if (options->scheme.night.temperature < 0) {
-		options->scheme.night.temperature = DEFAULT_NIGHT_TEMP;
-	}
-
-	if (isnan(options->scheme.day.brightness)) {
-		options->scheme.day.brightness = DEFAULT_BRIGHTNESS;
-	}
-	if (isnan(options->scheme.night.brightness)) {
-		options->scheme.night.brightness = DEFAULT_BRIGHTNESS;
-	}
-
-	if (isnan(options->scheme.day.gamma[0])) {
-		options->scheme.day.gamma[0] = DEFAULT_GAMMA;
-		options->scheme.day.gamma[1] = DEFAULT_GAMMA;
-		options->scheme.day.gamma[2] = DEFAULT_GAMMA;
-	}
-	if (isnan(options->scheme.night.gamma[0])) {
-		options->scheme.night.gamma[0] = DEFAULT_GAMMA;
-		options->scheme.night.gamma[1] = DEFAULT_GAMMA;
-		options->scheme.night.gamma[2] = DEFAULT_GAMMA;
-	}
-
-	options->useFade = true;
 }

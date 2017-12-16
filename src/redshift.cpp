@@ -967,7 +967,7 @@ main(int argc, char *argv[])
 	options_parse_config_file(
 		&options, &config_state, gamma_methods, location_providers);
 
-	options_set_defaults(&options);
+	options.setDefaults();
 
 	if (options.scheme.dawn.start >= 0 || options.scheme.dawn.end >= 0 ||
 	    options.scheme.dusk.start >= 0 || options.scheme.dusk.end >= 0) {
