@@ -24,6 +24,7 @@
 #include <array>
 #include <algorithm>
 #include <yellowstone/colorramp.hpp>
+#include "redshift.h"
 // #include "colorramp.h"
 
 /* Whitepoint values for temperatures at 100K intervals.
@@ -283,6 +284,7 @@ static constexpr std::array<double, 726> blackbody_color =
 #define F(Y, C)  pow((Y) * setting->brightness * \
 		     white_point[C], 1.0/setting->gamma[C])
 
+
 void
 colorramp_fill(uint16_t *gamma_r, uint16_t *gamma_g, uint16_t *gamma_b,
 	       int size, const color_setting_t *setting)
@@ -300,6 +302,11 @@ colorramp_fill(uint16_t *gamma_r, uint16_t *gamma_g, uint16_t *gamma_b,
 	               std::next(blackbody_color.cbegin(), temp_index + 3), // start of 2nd input array
 	               white_point.begin(),                                 // start of output array
 	               interpolate_color_func);                             // transformation operation (binary)
+
+	auto FILL = [setting, gamma_r, gamma_g, gamma_b, white_point](size_t idx){
+		gamma_r[idx] =  pow(double{gamma_r[idx]/(UINT16_MAX+1)} * setting->brightness * white_point[idx],
+		                    1.0/setting->gamma[idx]);
+	};
 
 	for (int i = 0; i < size; i++) {
 		gamma_r[i] = F((double)gamma_r[i]/(UINT16_MAX+1), 0) *
