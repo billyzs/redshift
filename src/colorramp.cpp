@@ -14,6 +14,7 @@
    You should have received a copy of the GNU General Public License
    along with Redshift.  If not, see <http://www.gnu.org/licenses/>.
 
+   Copyright (c) 2017-2018  Billy Zhou <billyzs.728@gmail.com>
    Copyright (c) 2013-2014  Jon Lund Steffensen <jonlst@gmail.com>
    Copyright (c) 2013  Ingo Thies <ithies@astro.uni-bonn.de>
 */

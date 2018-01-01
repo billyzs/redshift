@@ -15,7 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with yellowstone. If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright (c) 2017-2017    Billy Zhou <billyzs.728@gmail.com>
+    Copyright (c) 2017-2018    Billy Zhou <billyzs.728@gmail.com>
 	Copyright (c) 2017  	   Jon Lund Steffensen <jonlst@gmail.com>
 */
 

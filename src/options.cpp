@@ -1,5 +1,5 @@
 /* options.c -- Program options
-   This file is part of Redshift.
+   This file is part of Yellowstone.
 
    Redshift is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -14,6 +14,7 @@
    You should have received a copy of the GNU General Public License
    along with Redshift.  If not, see <http://www.gnu.org/licenses/>.
 
+   Copyright (c) 2017-2018  Billy Zhou <billyzs.728@gmail.com>
    Copyright (c) 2017  Jon Lund Steffensen <jonlst@gmail.com>
 */
 
@@ -43,6 +44,8 @@
 
 #include <iostream>
 #include <functional>
+#include <string>
+#include <sstream>
 
 using argParseFunc = std::function<void(Options&,      // Options obj to modify
                                         const char*)>; // value
@@ -56,9 +59,7 @@ static argParseFunc parseVerbosity = [](Options& opt, const char* value) {
 	opt.verbose = true;
 };
 
-static auto parser = std::unordered_map<YellowStoneOption, argParseFunc> {
-		{YellowStoneOption::Verbose, parseVerbosity}
-};
+
 
 void Options::init() {
 	scheme.day.temperature = -1;
@@ -114,6 +115,20 @@ parse_brightness_string(char *str, float *bright_day, float *bright_night)
 		*bright_night = atof(s);
 	}
 }
+
+static argParseFunc parseBrightness = [](Options& opt, const char* value) {
+	// use istream and getline
+	std::stringstream stream{std::string{value}};
+	std::string val_day, val_night;
+	std::getline(stream, val_day, ':');
+	opt.scheme.day.brightness = std::stof(val_day);
+	if (std::getline(stream, val_night, ':')) {
+		opt.scheme.night.brightness = std::stof(val_night);
+	}
+	else {
+		opt.scheme.night.brightness = opt.scheme.day.brightness;
+	}
+};
 
 /* A gamma string contains either one floating point value,
    or three values separated by colon. */
@@ -492,34 +507,38 @@ parse_command_line_option(
 	return 0;
 }
 
+static auto parser = std::unordered_map<YellowStoneOption, argParseFunc> {
+		{YellowStoneOption::Verbose, parseVerbosity},
+		{YellowStoneOption::Brightness, parseBrightness}
+};
+
 /* Parse command line arguments. */
 void
 options_parse_args(Options *options, int argc, char *argv[],
                    const gamma_method_t *gamma_methods, const location_provider_t *location_providers)
 {
-
-
-
-
 	const char* program_name = argv[0];
 	int opt;
-	while ((opt = getopt(argc, argv, "b:c:g:hl:m:oO:pPrt:v:Vx")) != -1) {
+	while ((opt = getopt(argc, argv, "b:c:g:hl:m:oO:pPrt:vVx")) != -1) {
 		char option = opt;
-		std::string optStr{option};
-		std::cout << "Program optStr: " << optStr << std::endl;
 		if (optarg) {
 			std::string argStr{optarg};
 			std::cout << "arg: " << argStr << std::endl;
 		}
 		// TODO use at(), try, catch
-		auto ysOption = cmdLineOptMapping.find(option);
-		if (ysOption != cmdLineOptMapping.end()) {
-			auto func = parser.find(ysOption->second);
-			if (func != parser.end()) {
-				func->second(*options, optarg);
+		try {
+			auto ysOption = cmdLineOptMapping.at(option);
+			std::string optStr{option};
+			std::cout << "Program optStr: " << optStr << std::endl;
+			parser[ysOption](*options, optarg);
+		}
+		catch (const std::out_of_range& e) {
+			// not a YellowStoneOption; is it a ProgramOption?
+			try {
+				options->mode = modeOptMapping.at(option);
 			}
-			else { // not a YellowStoneOption; is it a ProgramOption?
-
+			catch (const std::out_of_range& e) {
+				std::cerr << "Option not supported" << std::string{option} << std::endl;
 			}
 		}
 

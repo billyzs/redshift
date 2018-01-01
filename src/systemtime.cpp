@@ -1,5 +1,5 @@
 /* systemtime.c -- Portable system time source
-   This file is part of Redshift.
+   This file is part of Yellowstone.
 
    Redshift is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -14,6 +14,7 @@
    You should have received a copy of the GNU General Public License
    along with Redshift.  If not, see <http://www.gnu.org/licenses/>.
 
+   Copyright (c) 2017-2018  Billy Zhou <billyzs.728@gmail.com>
    Copyright (c) 2010-2014  Jon Lund Steffensen <jonlst@gmail.com>
 */
 //TODO convert to cpp
